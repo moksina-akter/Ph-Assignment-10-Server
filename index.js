@@ -45,11 +45,41 @@ async function run() {
       res.send(result);
     });
 
-    // app.get("/data/:id", async (req, res) => {
-    //   const { id } = req.params;
-    //   const product = await dataCollection.findOne({ _id: new id() });
-    //   res.send(product);
-    // });
+    // Single product details
+    app.get("/data/:id", async (req, res) => {
+      const id = req.params.id;
+      const product = await dataCollection.findOne({ _id: id });
+      res.send(product);
+    });
+
+    // Import product
+    app.patch("/import/:id", async (req, res) => {
+      const id = req.params.id;
+      const { importQuantity, userId } = req.body;
+
+      const product = await dataCollection.findOne({ _id: id });
+      if (!product) {
+        return res.status(404).send({ message: "Product not found" });
+      }
+
+      if (importQuantity > product.quantity) {
+        return res
+          .status(400)
+          .send({ message: "Import quantity exceeds available" });
+      }
+
+      const result = await dataCollection.updateOne(
+        { _id: id },
+        {
+          $inc: {
+            quantity: -importQuantity,
+            importedQuantity: importQuantity,
+          },
+        }
+      );
+
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
