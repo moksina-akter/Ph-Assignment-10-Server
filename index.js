@@ -25,10 +25,31 @@ async function run() {
     const db = client.db("ImportExport-db");
     const dataCollection = db.collection("data");
 
+    app.get("/latestProducts", async (req, res) => {
+      try {
+        const result = await dataCollection
+          .find()
+          .sort({ createdAt: -1 }) // latest first
+          .limit(6)
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        res
+          .status(500)
+          .send({ message: "Failed to fetch latest products", error });
+      }
+    });
+
     app.get("/data", async (req, res) => {
       const result = await dataCollection.find().toArray();
       res.send(result);
     });
+
+    // app.get("/data/:id", async (req, res) => {
+    //   const { id } = req.params;
+    //   const product = await dataCollection.findOne({ _id: new id() });
+    //   res.send(product);
+    // });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
@@ -48,5 +69,3 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
-//71T2qLbd0bFm0GzC
-//ImportExport-db
